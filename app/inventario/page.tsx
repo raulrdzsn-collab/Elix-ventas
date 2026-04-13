@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/src/lib/supabase'
-import Header from '@/components/Header'
+import Header from '../../components/Header'
 
 type Producto = {
   id: number
@@ -24,12 +24,9 @@ export default function InventarioPage() {
         .select('*')
 
       if (error) {
-        console.log('ERROR COMPLETO:', error)
         setMensaje(`Error: ${error.message}`)
         return
       }
-
-      console.log('DATA OK:', data)
 
       if (!data || data.length === 0) {
         setMensaje('No hay productos para mostrar')

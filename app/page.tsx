@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/src/lib/supabase'
-import Header from '@/components/Header'
+import Header from '../components/Header'
 
 export default function HomePage() {
   const router = useRouter()
