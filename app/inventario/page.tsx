@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/src/lib/supabase'
+import Header from '@/components/Header'
 
 type Producto = {
   id: number
@@ -43,7 +44,16 @@ export default function InventarioPage() {
   }, [])
 
   return (
-    <div style={{ padding: 20 }}>
+  <div
+    style={{
+      minHeight: '100vh',
+      background: '#0a0a0a',
+      color: 'white',
+    }}
+  >
+    <Header />
+
+    <div style={{ padding: 20, maxWidth: 900, margin: '0 auto' }}>
       <h1>Inventario</h1>
 
       {mensaje && <p>{mensaje}</p>}
@@ -52,7 +62,15 @@ export default function InventarioPage() {
         placeholder="Buscar perfume..."
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
-        style={{ padding: 10, marginBottom: 20, width: '100%' }}
+        style={{
+          padding: 10,
+          marginBottom: 20,
+          width: '100%',
+          borderRadius: 10,
+          border: '1px solid #333',
+          background: '#111',
+          color: 'white',
+        }}
       />
 
       <div style={{ display: 'grid', gap: 10 }}>
@@ -78,5 +96,5 @@ export default function InventarioPage() {
           ))}
       </div>
     </div>
-  )
-}
+  </div>
+)
