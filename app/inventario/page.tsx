@@ -44,57 +44,58 @@ export default function InventarioPage() {
   }, [])
 
   return (
-  <div
-    style={{
-      minHeight: '100vh',
-      background: '#0a0a0a',
-      color: 'white',
-    }}
-  >
-    <Header />
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0a0a0a',
+        color: 'white',
+      }}
+    >
+      <Header />
 
-    <div style={{ padding: 20, maxWidth: 900, margin: '0 auto' }}>
-      <h1>Inventario</h1>
+      <div style={{ padding: 20, maxWidth: 900, margin: '0 auto' }}>
+        <h1>Inventario</h1>
 
-      {mensaje && <p>{mensaje}</p>}
+        {mensaje && <p>{mensaje}</p>}
 
-      <input
-        placeholder="Buscar perfume..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        style={{
-          padding: 10,
-          marginBottom: 20,
-          width: '100%',
-          borderRadius: 10,
-          border: '1px solid #333',
-          background: '#111',
-          color: 'white',
-        }}
-      />
+        <input
+          placeholder="Buscar perfume..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          style={{
+            padding: 10,
+            marginBottom: 20,
+            width: '100%',
+            borderRadius: 10,
+            border: '1px solid #333',
+            background: '#111',
+            color: 'white',
+          }}
+        />
 
-      <div style={{ display: 'grid', gap: 10 }}>
-        {productos
-          .filter((p) =>
-            p.nombre.toLowerCase().includes(busqueda.toLowerCase())
-          )
-          .map((p) => (
-            <div
-              key={p.id}
-              style={{
-                border: '1px solid #333',
-                padding: 10,
-                borderRadius: 8,
-                background: '#111',
-              }}
-            >
-              <strong>{p.nombre}</strong>
-              <div>{p.presentacion}</div>
-              <div>Stock: {p.stock_actual}</div>
-              <div>Precio: ${p.precio ?? 0}</div>
-            </div>
-          ))}
+        <div style={{ display: 'grid', gap: 10 }}>
+          {productos
+            .filter((p) =>
+              p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+            )
+            .map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  border: '1px solid #333',
+                  padding: 10,
+                  borderRadius: 8,
+                  background: '#111',
+                }}
+              >
+                <strong>{p.nombre}</strong>
+                <div>{p.presentacion}</div>
+                <div>Stock: {p.stock_actual}</div>
+                <div>Precio: ${p.precio ?? 0}</div>
+              </div>
+            ))}
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
