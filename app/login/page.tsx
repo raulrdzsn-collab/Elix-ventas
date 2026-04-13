@@ -15,13 +15,10 @@ export default function LoginPage() {
     setMensaje('')
     setCargando(true)
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-
-    console.log('LOGIN DATA:', data)
-    console.log('LOGIN ERROR:', error)
 
     if (error) {
       setMensaje(`Error: ${error.message}`)
@@ -147,7 +144,6 @@ export default function LoginPage() {
             fontWeight: 700,
             fontSize: 16,
             cursor: 'pointer',
-            marginTop: 4,
             opacity: cargando ? 0.7 : 1,
           }}
         >

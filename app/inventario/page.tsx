@@ -41,16 +41,10 @@ export default function InventarioPage() {
   }, [])
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#0a0a0a',
-        color: 'white',
-      }}
-    >
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: 'white' }}>
       <Header />
 
-      <div style={{ padding: 20, maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ padding: 20, maxWidth: 600, margin: '0 auto' }}>
         <h1>Inventario</h1>
 
         {mensaje && <p>{mensaje}</p>}
@@ -60,7 +54,7 @@ export default function InventarioPage() {
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           style={{
-            padding: 10,
+            padding: 12,
             marginBottom: 20,
             width: '100%',
             borderRadius: 10,
@@ -70,7 +64,7 @@ export default function InventarioPage() {
           }}
         />
 
-        <div style={{ display: 'grid', gap: 10 }}>
+        <div style={{ display: 'grid', gap: 12 }}>
           {productos
             .filter((p) =>
               p.nombre.toLowerCase().includes(busqueda.toLowerCase())
@@ -79,16 +73,27 @@ export default function InventarioPage() {
               <div
                 key={p.id}
                 style={{
-                  border: '1px solid #333',
-                  padding: 10,
-                  borderRadius: 8,
+                  border: '1px solid #262626',
+                  padding: 14,
+                  borderRadius: 14,
                   background: '#111',
                 }}
               >
-                <strong>{p.nombre}</strong>
-                <div>{p.presentacion}</div>
-                <div>Stock: {p.stock_actual}</div>
-                <div>Precio: ${p.precio ?? 0}</div>
+                <strong style={{ fontSize: 16 }}>{p.nombre}</strong>
+
+                {p.presentacion && (
+                  <div style={{ color: '#aaa' }}>{p.presentacion}</div>
+                )}
+
+                <div style={{ marginTop: 4 }}>
+                  Stock: {p.stock_actual}
+                </div>
+
+                {p.precio && (
+                  <div style={{ color: '#d4d4d4' }}>
+                    Precio: ${p.precio}
+                  </div>
+                )}
               </div>
             ))}
         </div>

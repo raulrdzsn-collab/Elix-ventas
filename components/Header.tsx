@@ -15,101 +15,69 @@ export default function Header() {
     <div
       style={{
         width: '100%',
-        borderBottom: '1px solid #262626',
-        background: '#0f0f0f',
-        padding: '14px 20px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
+        padding: '16px 20px',
+        borderBottom: '1px solid #1f1f1f',
+        background: '#0a0a0a',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
       }}
     >
+      {/* LOGO */}
       <div
         style={{
-          maxWidth: 1000,
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          flexWrap: 'wrap',
+          fontSize: 22,
+          fontWeight: 700,
+          letterSpacing: 2,
+          color: '#d9d9d9',
         }}
       >
-        <div
+        ELIXIA
+      </div>
+
+      {/* BOTONES */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={() => router.push('/ventas')}
           style={{
-            fontSize: 28,
-            fontWeight: 700,
-            letterSpacing: 2,
-            color: '#c0c0c0',
-            fontFamily: 'Georgia, Times New Roman, serif',
-            textTransform: 'uppercase',
+            padding: '8px 14px',
+            borderRadius: 10,
+            border: '1px solid #333',
+            background: '#151515',
+            color: 'white',
+            cursor: 'pointer',
           }}
         >
-          ELIXIA
-        </div>
+          Ventas
+        </button>
 
-        <div
+        <button
+          onClick={() => router.push('/inventario')}
           style={{
-            display: 'flex',
-            gap: 10,
-            flexWrap: 'wrap',
+            padding: '8px 14px',
+            borderRadius: 10,
+            border: '1px solid #333',
+            background: '#151515',
+            color: 'white',
+            cursor: 'pointer',
           }}
         >
-          <button
-            onClick={() => router.push('/')}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid #333',
-              background: '#151515',
-              color: 'white',
-              cursor: 'pointer',
-            }}
-          >
-            Inicio
-          </button>
+          Inventario
+        </button>
 
-          <button
-            onClick={() => router.push('/ventas')}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid #333',
-              background: '#151515',
-              color: 'white',
-              cursor: 'pointer',
-            }}
-          >
-            Ventas
-          </button>
-
-          <button
-            onClick={() => router.push('/inventario')}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid #333',
-              background: '#151515',
-              color: 'white',
-              cursor: 'pointer',
-            }}
-          >
-            Inventario
-          </button>
-
-          <button
-            onClick={cerrarSesion}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid #4a1f1f',
-              background: '#1a1010',
-              color: '#ffb4b4',
-              cursor: 'pointer',
-            }}
-          >
-            Cerrar sesión
-          </button>
-        </div>
+        <button
+          onClick={cerrarSesion}
+          style={{
+            padding: '8px 14px',
+            borderRadius: 10,
+            border: '1px solid #4a1f1f',
+            background: '#1a1010',
+            color: '#ffb4b4',
+            cursor: 'pointer',
+          }}
+        >
+          Salir
+        </button>
       </div>
     </div>
   )

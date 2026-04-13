@@ -60,9 +60,18 @@ export default function HomePage() {
         >
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ margin: 0, fontSize: 32 }}>ELIXIA</h1>
-            <p style={{ marginTop: 8, color: '#aaa' }}>Panel principal</p>
+            <p style={{ marginTop: 8, color: '#aaa' }}>
+              Panel principal
+            </p>
+
             {email && (
-              <p style={{ marginTop: 6, color: '#888', fontSize: 14 }}>
+              <p
+                style={{
+                  marginTop: 6,
+                  color: '#888',
+                  fontSize: 14,
+                }}
+              >
                 {email}
               </p>
             )}
