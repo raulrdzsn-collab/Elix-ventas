@@ -20,21 +20,17 @@ type UsuarioActual = {
   email?: string
 }
 
-export default function VentasPage() {
+export default function StockPage() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [usuario, setUsuario] = useState<UsuarioActual | null>(null)
   const [productId, setProductId] = useState('')
   const [cantidad, setCantidad] = useState(1)
-  const [clientName, setClientName] = useState('')
-  const [clientPhone, setClientPhone] = useState('')
+  const [notas, setNotas] = useState('')
   const [mensaje, setMensaje] = useState('Cargando...')
   const [tipoMensaje, setTipoMensaje] = useState<'info' | 'success' | 'error'>(
     'info'
   )
-  const [totalHoy, setTotalHoy] = useState(0)
-  const [totalHistorico, setTotalHistorico] = useState(0)
   const [busqueda, setBusqueda] = useState('')
-
   const router = useRouter()
 
   useEffect(() => {
@@ -53,45 +49,20 @@ export default function VentasPage() {
         email: user.email,
       })
 
-      const { data: productosData, error: productosError } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('nombre', { ascending: true })
 
-      if (productosError) {
+      if (error) {
         setTipoMensaje('error')
-        setMensaje(`Error cargando productos: ${productosError.message}`)
+        setMensaje(`Error cargando productos: ${error.message}`)
         return
       }
 
-      setProductos(productosData || [])
+      setProductos(data || [])
       setTipoMensaje('info')
       setMensaje('')
-
-      const { data: ventasData, error: ventasError } = await supabase
-        .from('sales')
-        .select('total, created_at')
-
-      if (!ventasError && ventasData) {
-        const hoy = new Date()
-        const inicioDia = new Date(
-          hoy.getFullYear(),
-          hoy.getMonth(),
-          hoy.getDate()
-        )
-
-        const historico = ventasData.reduce(
-          (acc, venta) => acc + Number(venta.total || 0),
-          0
-        )
-
-        const hoyTotal = ventasData
-          .filter((venta) => new Date(venta.created_at) >= inicioDia)
-          .reduce((acc, venta) => acc + Number(venta.total || 0), 0)
-
-        setTotalHistorico(historico)
-        setTotalHoy(hoyTotal)
-      }
     }
 
     cargarTodo()
@@ -116,7 +87,7 @@ export default function VentasPage() {
 
     return productos
       .filter((p) =>
-        `${p.nombre} ${p.presentacion || ''}`
+        `${p.nombre} ${p.presentacion || ''} ${p.sku || ''}`
           .toLowerCase()
           .includes(texto)
       )
@@ -127,45 +98,6 @@ export default function VentasPage() {
     return productos.find((p) => p.id === Number(productId)) || null
   }, [productos, productId])
 
-  const totalVenta =
-    productoSeleccionado && cantidad > 0
-      ? Number(productoSeleccionado.precio || 0) * cantidad
-      : 0
-
-  const recargarProductosYTotales = async () => {
-    const { data: productosData } = await supabase
-      .from('products')
-      .select('*')
-      .order('nombre', { ascending: true })
-
-    setProductos(productosData || [])
-
-    const { data: ventasData } = await supabase
-      .from('sales')
-      .select('total, created_at')
-
-    if (ventasData) {
-      const hoy = new Date()
-      const inicioDia = new Date(
-        hoy.getFullYear(),
-        hoy.getMonth(),
-        hoy.getDate()
-      )
-
-      const historico = ventasData.reduce(
-        (acc, venta) => acc + Number(venta.total || 0),
-        0
-      )
-
-      const hoyTotal = ventasData
-        .filter((venta) => new Date(venta.created_at) >= inicioDia)
-        .reduce((acc, venta) => acc + Number(venta.total || 0), 0)
-
-      setTotalHistorico(historico)
-      setTotalHoy(hoyTotal)
-    }
-  }
-
   const seleccionarProducto = (id: number) => {
     setProductId(String(id))
   }
@@ -175,7 +107,16 @@ export default function VentasPage() {
     setBusqueda('')
   }
 
-  const registrarVenta = async () => {
+  const recargarProductos = async () => {
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .order('nombre', { ascending: true })
+
+    setProductos(data || [])
+  }
+
+  const guardarEntradaStock = async () => {
     setMensaje('')
     setTipoMensaje('info')
 
@@ -199,77 +140,65 @@ export default function VentasPage() {
       return
     }
 
-    if (cantidad > producto.stock_actual) {
+            const stockAnterior = producto.stock_actual
+            const stockNuevo = stockAnterior + cantidad
+
+            const { data: updatedRows, error: updateError } = await supabase
+        .from('products')
+        .update({ stock_actual: stockNuevo })
+        .eq('id', producto.id)
+        .select('id, stock_actual')
+
+        if (updateError) {
+        setTipoMensaje('error')
+        setMensaje(`Error actualizando stock: ${updateError.message}`)
+        return
+        }
+
+        if (!updatedRows || updatedRows.length === 0) {
+        setTipoMensaje('error')
+        setMensaje('No se pudo actualizar el stock en products')
+        return
+        }
+
+    const { error: movementError } = await supabase
+      .from('inventory_movements')
+      .insert([
+        {
+          product_id: producto.id,
+          user_id: usuario.id,
+          user_email: usuario.email || null,
+          movement_type: 'stock_in',
+          quantity: cantidad,
+          previous_stock: stockAnterior,
+          new_stock: stockNuevo,
+          notes: notas || null,
+        },
+      ])
+
+    if (movementError) {
       setTipoMensaje('error')
-      setMensaje('No hay suficiente inventario disponible')
+      setMensaje(
+        `Stock actualizado, pero error guardando movimiento: ${movementError.message}`
+      )
       return
     }
 
-   const precioUnitario = Number(producto.precio || 0)
-const total = totalVenta
-const nuevoStock = producto.stock_actual - cantidad
-
-const { error: salesError } = await supabase
-  .from('sales')
-  .insert([
-    {
-      product_id: producto.id,
-      seller_id: usuario.id,
-      seller_email: usuario.email || null,
-      seller_name: usuario.email || 'Usuario',
-      client_name: clientName || null,
-      client_phone: clientPhone || null,
-      cantidad,
-      precio_unitario: precioUnitario,
-      total,
-    },
-  ])
-
-if (salesError) {
-  setTipoMensaje('error')
-  setMensaje(`Error guardando venta: ${salesError.message}`)
-  return
-}
-
-const { data: updatedRows, error: stockError } = await supabase
-  .from('products')
-  .update({ stock_actual: nuevoStock })
-  .eq('id', producto.id)
-  .select('id, stock_actual')
-
-if (stockError) {
-  setTipoMensaje('error')
-  setMensaje(`Error actualizando inventario: ${stockError.message}`)
-  return
-}
-
-if (!updatedRows || updatedRows.length === 0) {
-  setTipoMensaje('error')
-  setMensaje('No se pudo descontar el inventario')
-  return
-}
-
     setTipoMensaje('success')
     setMensaje(
-      `Venta registrada | Código: ${producto.sku || 'N/A'} | Stock restante: ${nuevoStock}`
+      `Stock actualizado | Código: ${producto.sku || 'N/A'} | Nuevo stock: ${stockNuevo}`
     )
 
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate([100, 50, 100])
     }
 
-    setProductId('')
     setCantidad(1)
-    setClientName('')
-    setClientPhone('')
+    setNotas('')
+    setProductId('')
     setBusqueda('')
 
-    await recargarProductosYTotales()
-  }
-
-  const cerrarSesion = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
+    await recargarProductos()
   }
 
   const obtenerEstiloMensaje = () => {
@@ -316,7 +245,7 @@ if (!updatedRows || updatedRows.length === 0) {
         }}
       >
         <div>
-          <h1 style={{ fontSize: 32, marginBottom: 6 }}>Registrar venta</h1>
+          <h1 style={{ fontSize: 32, marginBottom: 6 }}>Alimentar stock</h1>
           {usuario && (
             <p style={{ color: '#aaa', margin: 0 }}>
               Usuario actual: {usuario.email}
@@ -336,44 +265,6 @@ if (!updatedRows || updatedRows.length === 0) {
             {mensaje}
           </div>
         )}
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 14,
-          }}
-        >
-          <div
-            style={{
-              border: '1px solid #262626',
-              borderRadius: 16,
-              padding: 18,
-              background: '#111',
-            }}
-          >
-            <div style={{ color: '#aaa', fontSize: 14, marginBottom: 8 }}>
-              Total vendido hoy
-            </div>
-            <div style={{ fontSize: 32, fontWeight: 700 }}>${totalHoy}</div>
-          </div>
-
-          <div
-            style={{
-              border: '1px solid #262626',
-              borderRadius: 16,
-              padding: 18,
-              background: '#111',
-            }}
-          >
-            <div style={{ color: '#aaa', fontSize: 14, marginBottom: 8 }}>
-              Total histórico vendido
-            </div>
-            <div style={{ fontSize: 32, fontWeight: 700 }}>
-              ${totalHistorico}
-            </div>
-          </div>
-        </div>
 
         <div
           style={{
@@ -397,7 +288,7 @@ if (!updatedRows || updatedRows.length === 0) {
               Buscar producto
             </label>
             <input
-              placeholder="Ej. Good Girl, 30ml..."
+              placeholder="Ej. Good Girl, 30ml, A001..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               style={{
@@ -444,8 +335,7 @@ if (!updatedRows || updatedRows.length === 0) {
                   >
                     <div style={{ fontWeight: 700 }}>{p.nombre}</div>
                     <div style={{ color: '#aaa', fontSize: 14 }}>
-                      {p.presentacion} | Disponible: {p.stock_actual} | Precio: $
-                      {p.precio ?? 0}
+                      {p.presentacion} | Código: {p.sku || 'N/A'} | Stock: {p.stock_actual}
                     </div>
                   </button>
                 ))
@@ -475,13 +365,13 @@ if (!updatedRows || updatedRows.length === 0) {
                     {productoSeleccionado.nombre}
                   </div>
                   <div style={{ color: '#ccc', marginBottom: 4 }}>
-                    Presentación: {productoSeleccionado.presentacion}
+                    Código: {productoSeleccionado.sku || 'N/A'}
                   </div>
                   <div style={{ color: '#ccc', marginBottom: 4 }}>
-                    Precio: ${productoSeleccionado.precio ?? 0}
+                    Presentación: {productoSeleccionado.presentacion}
                   </div>
                   <div style={{ color: '#ccc' }}>
-                    Disponible: {productoSeleccionado.stock_actual}
+                    Stock actual: {productoSeleccionado.stock_actual}
                   </div>
                 </div>
 
@@ -503,68 +393,6 @@ if (!updatedRows || updatedRows.length === 0) {
             </div>
           )}
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 12,
-            }}
-          >
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: 8,
-                  fontSize: 14,
-                  color: '#bbb',
-                }}
-              >
-                Cantidad
-              </label>
-              <input
-                type="number"
-                min={1}
-                placeholder="Cantidad"
-                value={cantidad}
-                onChange={(e) => setCantidad(parseInt(e.target.value || '1', 10))}
-                style={{
-                  width: '100%',
-                  padding: 14,
-                  borderRadius: 12,
-                  border: '1px solid #333',
-                  background: '#0c0c0c',
-                  color: 'white',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: 8,
-                  fontSize: 14,
-                  color: '#bbb',
-                }}
-              >
-                Total de esta venta
-              </label>
-              <div
-                style={{
-                  width: '100%',
-                  padding: 14,
-                  borderRadius: 12,
-                  border: '1px solid #333',
-                  background: '#0c0c0c',
-                  color: 'white',
-                }}
-              >
-                ${totalVenta}
-              </div>
-            </div>
-          </div>
-
           <div>
             <label
               style={{
@@ -574,12 +402,14 @@ if (!updatedRows || updatedRows.length === 0) {
                 color: '#bbb',
               }}
             >
-              Nombre del cliente
+              Cantidad a agregar
             </label>
             <input
-              placeholder="Nombre del cliente"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
+              type="number"
+              min={1}
+              placeholder="Cantidad"
+              value={cantidad}
+              onChange={(e) => setCantidad(parseInt(e.target.value || '1', 10))}
               style={{
                 width: '100%',
                 padding: 14,
@@ -601,12 +431,12 @@ if (!updatedRows || updatedRows.length === 0) {
                 color: '#bbb',
               }}
             >
-              Teléfono del cliente
+              Nota
             </label>
             <input
-              placeholder="Teléfono del cliente"
-              value={clientPhone}
-              onChange={(e) => setClientPhone(e.target.value)}
+              placeholder="Ej. ingreso de proveedor, ajuste inicial..."
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
               style={{
                 width: '100%',
                 padding: 14,
@@ -619,44 +449,20 @@ if (!updatedRows || updatedRows.length === 0) {
             />
           </div>
 
-          <div
+          <button
+            onClick={guardarEntradaStock}
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 12,
-              marginTop: 6,
+              padding: 14,
+              background: '#fff',
+              color: '#000',
+              border: 'none',
+              borderRadius: 12,
+              cursor: 'pointer',
+              fontWeight: 700,
             }}
           >
-            <button
-              onClick={registrarVenta}
-              style={{
-                padding: 14,
-                background: '#fff',
-                color: '#000',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 700,
-              }}
-            >
-              Confirmar venta
-            </button>
-
-            <button
-              onClick={cerrarSesion}
-              style={{
-                padding: 14,
-                background: '#1a1a1a',
-                color: 'white',
-                border: '1px solid #333',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Cerrar sesión
-            </button>
-          </div>
+            Guardar stock
+          </button>
         </div>
       </div>
     </div>

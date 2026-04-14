@@ -64,7 +64,19 @@ export default function Header() {
         >
           Inventario
         </button>
-
+        <button
+        onClick={() => router.push('/stock')}
+        style={{
+            padding: '8px 14px',
+            borderRadius: 10,
+            border: '1px solid #333',
+            background: '#151515',
+            color: 'white',
+            cursor: 'pointer',
+        }}
+        >
+        Stock
+        </button>
         <button
           onClick={cerrarSesion}
           style={{
