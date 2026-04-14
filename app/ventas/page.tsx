@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/src/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Header from '../../components/Header'
 
 type Producto = {
   id: number
@@ -27,7 +28,9 @@ export default function VentasPage() {
   const [clientName, setClientName] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [mensaje, setMensaje] = useState('Cargando...')
-  const [tipoMensaje, setTipoMensaje] = useState<'info' | 'success' | 'error'>('info')
+  const [tipoMensaje, setTipoMensaje] = useState<'info' | 'success' | 'error'>(
+    'info'
+  )
   const [totalHoy, setTotalHoy] = useState(0)
   const [totalHistorico, setTotalHistorico] = useState(0)
   const [busqueda, setBusqueda] = useState('')
@@ -124,6 +127,11 @@ export default function VentasPage() {
     return productos.find((p) => p.id === Number(productId)) || null
   }, [productos, productId])
 
+  const totalVenta =
+    productoSeleccionado && cantidad > 0
+      ? Number(productoSeleccionado.precio || 0) * cantidad
+      : 0
+
   const recargarProductosYTotales = async () => {
     const { data: productosData } = await supabase
       .from('products')
@@ -198,24 +206,22 @@ export default function VentasPage() {
     }
 
     const precioUnitario = Number(producto.precio || 0)
-    const total = precioUnitario * cantidad
+    const total = totalVenta
     const nuevoStock = producto.stock_actual - cantidad
 
-    const { error: salesError } = await supabase
-      .from('sales')
-      .insert([
-        {
-          product_id: producto.id,
-          seller_id: usuario.id,
-          seller_email: usuario.email || null,
-          seller_name: usuario.email || 'Usuario',
-          client_name: clientName || null,
-          client_phone: clientPhone || null,
-          cantidad,
-          precio_unitario: precioUnitario,
-          total,
-        },
-      ])
+    const { error: salesError } = await supabase.from('sales').insert([
+      {
+        product_id: producto.id,
+        seller_id: usuario.id,
+        seller_email: usuario.email || null,
+        seller_name: usuario.email || 'Usuario',
+        client_name: clientName || null,
+        client_phone: clientPhone || null,
+        cantidad,
+        precio_unitario: precioUnitario,
+        total,
+      },
+    ])
 
     if (salesError) {
       setTipoMensaje('error')
@@ -230,18 +236,19 @@ export default function VentasPage() {
 
     if (stockError) {
       setTipoMensaje('error')
-      setMensaje(`Venta guardada, pero error actualizando inventario: ${stockError.message}`)
+      setMensaje(
+        `Venta guardada, pero error actualizando inventario: ${stockError.message}`
+      )
       return
     }
 
     setTipoMensaje('success')
     setMensaje(
-    `Venta registrada ✔ | Código: ${producto.sku || 'N/A'} | Stock restante: ${nuevoStock}`
+      `Venta registrada | Código: ${producto.sku || 'N/A'} | Stock restante: ${nuevoStock}`
     )
 
-// 🔥 Vibración en móvil
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    navigator.vibrate([100, 50, 100]) // vibra-pausa-vibra
+      navigator.vibrate([100, 50, 100])
     }
 
     setProductId('')
@@ -288,11 +295,13 @@ export default function VentasPage() {
         minHeight: '100vh',
         background: '#0a0a0a',
         color: 'white',
-        padding: 20,
       }}
     >
+      <Header />
+
       <div
         style={{
+          padding: 20,
           maxWidth: 760,
           margin: '0 auto',
           display: 'grid',
@@ -428,7 +437,7 @@ export default function VentasPage() {
                   >
                     <div style={{ fontWeight: 700 }}>{p.nombre}</div>
                     <div style={{ color: '#aaa', fontSize: 14 }}>
-                      {p.presentacion} · Disponible: {p.stock_actual} · Precio: $
+                      {p.presentacion} | Disponible: {p.stock_actual} | Precio: $
                       {p.precio ?? 0}
                     </div>
                   </button>
@@ -510,7 +519,7 @@ export default function VentasPage() {
                 min={1}
                 placeholder="Cantidad"
                 value={cantidad}
-                onChange={(e) => setCantidad(Number(e.target.value))}
+                onChange={(e) => setCantidad(parseInt(e.target.value || '1', 10))}
                 style={{
                   width: '100%',
                   padding: 14,
@@ -544,10 +553,7 @@ export default function VentasPage() {
                   color: 'white',
                 }}
               >
-                $
-                {productoSeleccionado
-                  ? Number(productoSeleccionado.precio || 0) * cantidad
-                  : 0}
+                ${totalVenta}
               </div>
             </div>
           </div>
@@ -626,7 +632,7 @@ export default function VentasPage() {
                 fontWeight: 700,
               }}
             >
-              Confirmar Venta
+              Confirmar venta
             </button>
 
             <button
@@ -649,4 +655,3 @@ export default function VentasPage() {
     </div>
   )
 }
-
