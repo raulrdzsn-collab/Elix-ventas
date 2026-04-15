@@ -116,7 +116,7 @@ export default function VentasPage() {
 
     return productos
       .filter((p) =>
-        `${p.nombre} ${p.presentacion || ''}`
+        `${p.nombre} ${p.presentacion || ''} ${p.sku || ''}`
           .toLowerCase()
           .includes(texto)
       )
@@ -443,6 +443,7 @@ if (!updatedRows || updatedRows.length === 0) {
                     }}
                   >
                     <div style={{ fontWeight: 700 }}>{p.nombre}</div>
+                    <div style={{ color: '#888', fontSize: 13 }}>SKU: {p.sku}</div>
                     <div style={{ color: '#aaa', fontSize: 14 }}>
                       {p.presentacion} | Disponible: {p.stock_actual} | Precio: $
                       {p.precio ?? 0}
@@ -476,6 +477,9 @@ if (!updatedRows || updatedRows.length === 0) {
                   </div>
                   <div style={{ color: '#ccc', marginBottom: 4 }}>
                     Presentación: {productoSeleccionado.presentacion}
+                  </div>
+                  <div style={{ color: '#ccc', marginBottom: 4 }}>
+                    SKU: {productoSeleccionado.sku}
                   </div>
                   <div style={{ color: '#ccc', marginBottom: 4 }}>
                     Precio: ${productoSeleccionado.precio ?? 0}

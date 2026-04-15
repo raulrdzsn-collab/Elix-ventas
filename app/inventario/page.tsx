@@ -67,7 +67,9 @@ export default function InventarioPage() {
         <div style={{ display: 'grid', gap: 12 }}>
           {productos
             .filter((p) =>
-              p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+              `${p.nombre} ${p.sku || ''}`
+                .toLowerCase()
+                .includes(busqueda.toLowerCase())
             )
             .map((p) => (
               <div
@@ -79,7 +81,8 @@ export default function InventarioPage() {
                   background: '#111',
                 }}
               >
-                <strong style={{ fontSize: 16 }}>{p.nombre}</strong>
+                <strong>{p.nombre}</strong>
+                <div style={{ color: '#888' }}>SKU: {p.sku}</div>
 
                 {p.presentacion && (
                   <div style={{ color: '#aaa' }}>{p.presentacion}</div>
